@@ -12,15 +12,15 @@ import 'package:myapp/features/onboarding/screens/onboarding_screen.dart';
 import 'package:myapp/features/profile/screens/edit_profile_screen.dart';
 import 'package:myapp/features/profile/screens/profile_screen.dart';
 import 'package:myapp/features/profile/screens/profile_setup_screen.dart';
-import 'package:myapp/providers/theme_provider.dart'; // <--- FIX: ADDED THIS IMPORT
+import 'package:myapp/providers/theme_provider.dart'; 
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
-    url: Constants.supabaseUrl,
-    anonKey: Constants.supabaseAnonKey,
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
   runApp(
     ChangeNotifierProvider(
@@ -29,8 +29,6 @@ void main() async {
     ),
   );
 }
-
-final supabase = Supabase.instance.client;
 
 final _router = GoRouter(
   initialLocation: '/',
