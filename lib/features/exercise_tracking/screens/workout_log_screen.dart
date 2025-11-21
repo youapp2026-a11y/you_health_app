@@ -1,46 +1,44 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:myapp/models/workout_log.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../../../main.dart';
-import '../models/workout_log.dart';
+import 'package:myapp/constants.dart';
 
 class WorkoutLogScreen extends StatefulWidget {
   const WorkoutLogScreen({super.key});
 
   @override
-  _WorkoutLogScreenState createState() => _WorkoutLogScreenState();
+  State<WorkoutLogScreen> createState() => _WorkoutLogScreenState();
 }
 
 class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
-  late Future<List<WorkoutLog>> _workoutsFuture;
+  late Future<List<WorkoutLog>> _workoutLogsFuture;
 
   @override
   void initState() {
     super.initState();
-    _workoutsFuture = _fetchWorkouts();
+    _workoutLogsFuture = _fetchWorkoutLogs();
   }
 
-  Future<List<WorkoutLog>> _fetchWorkouts() async {
+  Future<List<WorkoutLog>> _fetchWorkoutLogs() async {
     final user = supabase.auth.currentUser;
     if (user == null) {
-      throw Exception('User is not authenticated');
+      return [];
     }
 
-    final today = DateTime.now();
-    final beginningOfDay = DateTime(today.year, today.month, today.day);
-    final endOfDay = beginningOfDay.add(const Duration(days: 1));
-
-    final response = await supabase
-        .from('workout_logs')
-        .select()
-        .eq('user_id', user.id)
-        .gte('created_at', beginningOfDay.toIso8601String())
-        .lt('created_at', endOfDay.toIso8601String())
-        .order('created_at', ascending: false);
-
-    return (response as List).map((json) => WorkoutLog.fromJson(json)).toList();
+    try {
+      final response = await supabase
+          .from('workout_logs')
+          .select()
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false);
+      return (response as List).map((e) => WorkoutLog.fromJson(e)).toList();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching workouts: $e')),
+      );
+      return [];
+    }
   }
 
   @override
@@ -50,7 +48,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
         title: Text('Today\'s Workouts (${DateFormat.yMd().format(DateTime.now())})'),
       ),
       body: FutureBuilder<List<WorkoutLog>>(
-        future: _workoutsFuture,
+        future: _workoutLogsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -58,60 +56,21 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No workouts logged for today.'));
+          final workouts = snapshot.data ?? [];
+          if (workouts.isEmpty) {
+            return const Center(child: Text('No workouts logged yet.'));
           }
-
-          final workouts = snapshot.data!;
-          final totalDuration = workouts.fold(0, (sum, log) => sum + log.durationMinutes);
-          final totalCalories = workouts.fold(0, (sum, log) => sum + (log.caloriesBurned ?? 0));
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Column(
-                          children: [
-                            Text('Total Duration', style: Theme.of(context).textTheme.titleLarge),
-                            const SizedBox(height: 8),
-                            Text('$totalDuration mins', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Text('Calories Burned', style: Theme.of(context).textTheme.titleLarge),
-                            const SizedBox(height: 8),
-                            Text('$totalCalories kcal', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Theme.of(context).colorScheme.primary)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: workouts.length,
-                  itemBuilder: (context, index) {
-                    final workout = workouts[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      child: ListTile(
-                        title: Text(workout.workoutName),
-                        subtitle: Text('${workout.durationMinutes} mins - ${workout.caloriesBurned ?? 0} kcal'),
-                        trailing: Text(DateFormat.jm().format(workout.createdAt.toLocal())),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+          return ListView.builder(
+            itemCount: workouts.length,
+            itemBuilder: (context, index) {
+              final workout = workouts[index];
+              return ListTile(
+                title: Text(workout.exerciseName),
+                subtitle: Text(
+                    '${workout.durationMinutes} mins - ${workout.caloriesBurned} kcal'),
+                trailing: Text(DateFormat.jm().format(workout.createdAt.toLocal())),
+              );
+            },
           );
         },
       ),
