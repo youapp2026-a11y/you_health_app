@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:myapp/app/app_theme.dart';
 import 'package:myapp/constants.dart';
 import 'package:myapp/features/auth/screens/auth_screen.dart';
@@ -18,6 +19,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
