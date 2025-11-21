@@ -30,6 +30,8 @@ void main() async {
   );
 }
 
+final supabase = Supabase.instance.client;
+
 final _router = GoRouter(
   initialLocation: '/',
   routes: [

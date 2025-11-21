@@ -120,7 +120,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 validator: (value) => value!.isEmpty ? 'Please enter your weight' : null,
               ),
               DropdownButtonFormField<String>(
-                value: _gender,
+                initialValue: _gender,
                 decoration: const InputDecoration(labelText: 'Gender'),
                 items: ['Male', 'Female', 'Other'].map((String value) {
                   return DropdownMenuItem<String>(

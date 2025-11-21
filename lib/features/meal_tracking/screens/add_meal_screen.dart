@@ -66,7 +66,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 validator: (value) => value!.isEmpty ? 'Please enter calories' : null,
               ),
               DropdownButtonFormField<String>(
-                value: _mealType,
+                initialValue: _mealType,
                 decoration: const InputDecoration(labelText: 'Meal Type'),
                 items: ['Breakfast', 'Lunch', 'Dinner', 'Snack']
                     .map((label) => DropdownMenuItem(
